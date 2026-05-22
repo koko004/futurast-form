@@ -47,6 +47,36 @@ export default function App() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [showEmailSettings, setShowEmailSettings] = useState(false);
+  const [emailSettings, setEmailSettings] = useState({
+    user: "",
+    password: "",
+  });
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.user) {
+          setEmailSettings({ user: data.user, password: data.password || "" });
+        }
+      })
+      .catch(err => console.error("Error loading settings", err));
+  }, []);
+
+  const handleSaveEmailSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailSettings)
+      });
+      setShowEmailSettings(false);
+    } catch (err) {
+      console.error("Error saving settings", err);
+    }
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem("futurast_inscritas");
@@ -265,6 +295,56 @@ export default function App() {
         </div>
       )}
 
+      {/* Email Settings Modal */}
+      {showEmailSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Configuración Servidor Email</h3>
+            <form onSubmit={handleSaveEmailSettings}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email / Usuario SMTP</label>
+                  <input
+                    type="email"
+                    value={emailSettings.user}
+                    onChange={(e) => setEmailSettings(prev => ({ ...prev, user: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0055A4]/20 focus:border-[#0055A4] transition-all"
+                    placeholder="ejemplo@gmail.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Contraseña (Aplicación)</label>
+                  <input
+                    type="password"
+                    value={emailSettings.password}
+                    onChange={(e) => setEmailSettings(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0055A4]/20 focus:border-[#0055A4] transition-all"
+                    placeholder="Contraseña de aplicación de Gmail"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 justify-end mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowEmailSettings(false)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#0055A4] text-white rounded-xl font-medium hover:bg-[#00448a] transition-colors"
+                >
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-40 backdrop-blur-xl bg-white/90">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -309,16 +389,28 @@ export default function App() {
                 <h2 className="text-2xl font-semibold text-gray-900">Panel de Inscritas</h2>
                 <p className="text-sm text-gray-500 mt-1">Total: {inscritas.length} jugadoras registradas</p>
               </div>
-              <button
-                onClick={() => window.location.href = '/api/inscritas.csv'}
-                disabled={inscritas.length === 0}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0055A4] text-white rounded-xl font-medium hover:bg-[#00448a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Descargar inscritas.csv
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowEmailSettings(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Configurar Email
+                </button>
+                <button
+                  onClick={() => window.location.href = '/api/inscritas.csv'}
+                  disabled={inscritas.length === 0}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0055A4] text-white rounded-xl font-medium hover:bg-[#00448a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Descargar inscritas.csv
+                </button>
+              </div>
             </div>
             
             <div className="overflow-x-auto">
@@ -421,6 +513,39 @@ export default function App() {
                   </p>
 
                   <div className="flex flex-wrap gap-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-xs text-blue-200">Fecha</div>
+                        <div className="font-semibold">6 de Junio</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-xs text-blue-200">Horario</div>
+                        <div className="font-semibold">10:00 a 14:00h</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-xs text-blue-200">Precio</div>
+                        <div className="font-semibold">Gratuito</div>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
