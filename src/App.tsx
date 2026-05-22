@@ -554,7 +554,7 @@ export default function App() {
                       </div>
                       <div>
                         <div className="text-xs text-blue-200">Categorías</div>
-                        <div className="font-semibold">Benjamín a Infantil</div>
+                        <div className="font-semibold">Hasta 12 años</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">

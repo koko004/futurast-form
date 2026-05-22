@@ -64,7 +64,7 @@ const sendConfirmationEmail = async (data) => {
         </div>
         
         <p>Te recordamos que la niña está inscrita con la talla de camiseta: <strong>${data.talla}</strong>.</p>
-        <p>Si tienes alguna duda, puedes contactar con la Real Federación de Fútbol del Principado de Asturias.</p>
+        <p>Si tienes alguna duda, puedes contactar con la Real Federación de Fútbol del Principado de Asturias en el correo electrónico <a href="mailto:itziar@asturfutbol.es" style="color: #0055A4; text-decoration: none;">itziar@asturfutbol.es</a>.</p>
         
         <br>
         <p>Un saludo,</p>
