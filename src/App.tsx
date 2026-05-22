@@ -79,10 +79,19 @@ export default function App() {
   };
 
   useEffect(() => {
-    const stored = localStorage.getItem("futurast_inscritas");
-    if (stored) {
-      setInscritas(JSON.parse(stored));
-    }
+    fetch('/api/inscritas')
+      .then(res => res.json())
+      .then(data => {
+        setInscritas(data);
+        localStorage.setItem("futurast_inscritas", JSON.stringify(data));
+      })
+      .catch(err => {
+        console.error("Error fetching inscritas", err);
+        const stored = localStorage.getItem("futurast_inscritas");
+        if (stored) {
+          setInscritas(JSON.parse(stored));
+        }
+      });
   }, []);
 
   const validateDNI = (dni: string) => {

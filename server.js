@@ -205,9 +205,50 @@ const server = http.createServer((req, res) => {
       res.end('File not found');
     }
   } else if (req.url === '/api/inscritas' && req.method === 'GET') {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify([])); 
+    if (fs.existsSync(csvPath)) {
+      const fileContent = fs.readFileSync(csvPath, 'utf8');
+      const lines = fileContent.split('\r\n').filter(line => line.trim() !== '');
+      if (lines.length > 1) {
+        const data = lines.slice(1).map(line => {
+          const parts = line.split(';');
+          const val = (idx) => parts[idx] ? parts[idx].replace(/^"|"$/g, '').replace(/""/g, '"') : '';
+          
+          const nameParts = val(1).split(' ');
+          const nombreNina = nameParts[0] || '';
+          const apellidosNina = nameParts.slice(1).join(' ') || '';
+
+          return {
+            fechaInscripcion: val(0),
+            nombreNina: nombreNina,
+            apellidosNina: apellidosNina,
+            fechaNacimiento: val(2),
+            dniNina: val(3),
+            nombreTutor: val(4),
+            apellidosTutor: val(5),
+            emailTutor: val(6),
+            telefonoTutor: val(7),
+            federada: val(8),
+            club: val(9) === '-' ? '' : val(9),
+            categoria: val(10) === '-' ? '' : val(10),
+            talla: val(11),
+            intolerancias: val(12) === '-' ? '' : val(12),
+            observaciones: val(13) === '-' ? '' : val(13),
+            aceptaImagenes: true
+          };
+        });
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(data));
+      } else {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify([])); 
+      }
+    } else {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify([])); 
+    }
   } else {
     // Serve Static Files
     let reqUrl = req.url === '/' ? '/index.html' : req.url;
